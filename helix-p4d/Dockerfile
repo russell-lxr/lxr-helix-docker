@@ -2,18 +2,41 @@
 # Docker configuration for P4D
 # --------------------------------------------------------------------------------
 
-FROM ubuntu:xenial
+#FROM ubuntu:xenial
 
-LABEL vendor="Perforce Software"
-LABEL maintainer="Paul Allen (pallen@perforce.com)"
+#LABEL vendor="Perforce Software"
+#LABEL maintainer="Paul Allen (pallen@perforce.com)"
 
 # Update Ubuntu and add Perforce Package Source
-RUN \
-  apt-get update && \
-  apt-get install -y wget unzip vim  && \
-  wget -qO - https://package.perforce.com/perforce.pubkey | apt-key add - && \
-  echo "deb http://package.perforce.com/apt/ubuntu xenial release" > /etc/apt/sources.list.d/perforce.list && \
-  apt-get update
+#RUN \
+#  apt-get update && \
+#  apt-get install -y wget unzip vim  && \
+#  wget -qO - https://package.perforce.com/perforce.pubkey | apt-key add - && \
+#  echo "deb http://package.perforce.com/apt/ubuntu xenial release" > /etc/apt/sources.list.d/perforce.list && \
+#  apt-get update
+
+
+FROM ubuntu:bionic
+
+# Update package lists
+RUN apt-get update
+
+# Install essential tools and gnupg
+RUN apt-get install -y wget curl unzip vim gnupg
+
+# Add Perforce public key
+RUN wget -qO - https://package.perforce.com/perforce.pubkey | apt-key add -
+
+# Add Perforce repository for Bionic
+RUN echo "deb http://package.perforce.com/apt/ubuntu bionic release" > /etc/apt/sources.list.d/perforce.list
+
+# Update package lists to include Perforce packages
+RUN apt-get update
+
+#RUN \
+#  apt-get install -y helix-p4d && \
+#  apt-get install -y helix-swarm-triggers
+
 
 # --------------------------------------------------------------------------------
 # Docker ENVIRONMENT

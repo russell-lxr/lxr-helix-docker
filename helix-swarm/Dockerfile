@@ -2,24 +2,65 @@
 # Docker configuration for Swarm
 # --------------------------------------------------------------------------------
 
-FROM ubuntu:xenial
+#FROM ubuntu:xenial
 
-LABEL vendor="Perforce Software"
-LABEL maintainer="Paul Allen (pallen@perforce.com)"
+#LABEL vendor="Perforce Software"
+#LABEL maintainer="Paul Allen (pallen@perforce.com)"
 
 # Update Ubuntu and add Perforce Package Source
-RUN \
-  apt-get update  && \
-  apt-get install -y wget curl unzip vim && \
-  wget -qO - https://package.perforce.com/perforce.pubkey | apt-key add - && \
-  echo "deb http://package.perforce.com/apt/ubuntu xenial release" > /etc/apt/sources.list.d/perforce.list && \
-  apt-get update
+#RUN \
+#  apt-get update  && \
+#  apt-get install -y wget curl unzip vim && \
+#  wget -qO - https://package.perforce.com/perforce.pubkey | apt-key add - && \
+#  echo "deb http://package.perforce.com/apt/ubuntu xenial release" > /etc/apt/sources.list.d/perforce.list && \
+#  apt-get update
 
-# Create swarm user and install Helix Swarm
-RUN \
-  useradd --user-group --home-dir /home/swarm --create-home --uid 1000 swarm && \
-  apt-get install -y helix-cli && \
-  apt-get install -y -f helix-swarm=2019.1-1829459~xenial
+
+FROM ubuntu:bionic
+
+# Update package lists
+RUN apt-get update
+
+# Install essential tools and gnupg
+RUN apt-get install -y wget curl unzip vim gnupg
+
+# Add Perforce public key
+RUN wget -qO - https://package.perforce.com/perforce.pubkey | apt-key add -
+
+# Add Perforce repository for Bionic
+RUN echo "deb http://package.perforce.com/apt/ubuntu bionic release" > /etc/apt/sources.list.d/perforce.list
+
+# Update package lists to include Perforce packages
+RUN apt-get update
+
+# Set environment variables to configure tzdata non-interactively
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/London
+
+# Install tzdata to avoid timezone prompt
+RUN apt-get install -y --no-install-recommends tzdata
+
+# Configure timezone settings
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Install Helix CLI
+RUN apt-get install -y --no-install-recommends helix-cli
+
+# Clean up package lists to reduce image size
+RUN rm -rf /var/lib/apt/lists/*
+
+# Create swarm user
+RUN useradd --user-group --home-dir /home/swarm --create-home --uid 1000 swarm
+
+# Update package lists again (to ensure latest for next install)
+RUN apt-get update
+
+# Install Helix Swarm
+RUN apt-get install -y --no-install-recommends helix-swarm
+
+# Final cleanup of package lists
+RUN rm -rf /var/lib/apt/lists/*
+
 
 # --------------------------------------------------------------------------------
 # Docker ENVIRONMENT
